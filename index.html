@@ -154,8 +154,19 @@ function uncoveredCount(){return DIMENSIONS.filter(function(d){return ST.core.di
 
 /* ================= Akış mantığı ================= */
 function startFlow(){
+  clearState();
   ST.stage=STAGE.L1;ST.core=freshCore();render();
   advance();
+}
+function resumeFlow(){
+  var saved=loadState();if(!saved||!saved.stage){startFlow();return;}
+  ST.stage=saved.stage;ST.core=saved.core;ST.curQ=saved.curQ||null;ST.curTask=saved.curTask||null;
+  ST.confrontQ=saved.confrontQ||[];ST.confrontA=saved.confrontA||[];ST.confrontIdx=saved.confrontIdx||0;ST.report=saved.report||'';
+  render();
+  if(ST.stage!==STAGE.DONE){
+    var hasContent=(ST.stage===STAGE.L1||ST.stage===STAGE.L3)?!!ST.curQ:(ST.stage===STAGE.L2)?!!ST.curTask:(ST.stage===STAGE.L4)?ST.confrontQ.length>0:false;
+    if(!hasContent)advance();
+  }
 }
 function restart(){clearState();ST={stage:STAGE.INTRO,core:freshCore(),curQ:null,curTask:null,confrontQ:[],confrontA:[],confrontIdx:0,report:'',busy:false,error:null};render();}
 
@@ -286,10 +297,17 @@ function updateProgress(){
   var el=document.getElementById('pfill');if(el)el.style.width=Math.round(pct)+'%';
 }
 function tplIntro(){
+  var saved=loadState();
+  var resumeBtn='';
+  if(saved&&saved.stage&&saved.stage!==STAGE.INTRO){
+    resumeBtn=saved.stage===STAGE.DONE
+      ? '<button class="btn" onclick="resumeFlow()" style="margin-left:8px">Son raporunu gör</button>'
+      : '<button class="btn" onclick="resumeFlow()" style="margin-left:8px">↻ Kaldığın yerden devam et</button>';
+  }
   return '<div class="intro"><div class="eyebrow">POTANSİYEL & YETENEK ANALİZİ</div>'
     +'<h1 class="intro-title">Neyi gerçekten iyi yaptığını,<br><em>"ne sevdiğini" sormadan</em> bul.</h1>'
     +'<p class="intro-body">Amaç kişiliğini etiketlemek değil - sana ne yapıp ne yapamadığını dürüstçe gösterip somut bir yön vermek. Birkaç senaryo ve küçük bir görevle başlıyoruz, en sonda elindeki kanıta dayanan, uygulanabilir bir yol haritası çıkıyor.</p>'
-    +'<button class="btn primary" onclick="startFlow()">Başla</button>'
+    +'<button class="btn primary" onclick="startFlow()">'+(saved&&saved.stage&&saved.stage!==STAGE.INTRO?'Yeniden başla':'Başla')+'</button>'+resumeBtn
     +'<div class="note">~10 dakika · dürüst cevaplarla daha iyi sonuç verir · cevapların yalnızca bu cihazda kalır</div></div>';
 }
 function tplShell(inner){
@@ -354,22 +372,9 @@ function tplReport(){
 }
 function retryCurrent(){ST.error=null;render();advance();}
 
-/* Sayfa açılışında kayıtlı ilerleme varsa (yenileme/yeniden ziyaret) doğrudan
-   oradan devam et - giriş ekranını tekrar göstermeden. */
-(function bootResume(){
-  var saved=loadState();
-  var needsAdvance=false;
-  if(saved&&saved.stage&&saved.stage!==STAGE.INTRO){
-    ST.stage=saved.stage;ST.core=saved.core;ST.curQ=saved.curQ||null;ST.curTask=saved.curTask||null;
-    ST.confrontQ=saved.confrontQ||[];ST.confrontA=saved.confrontA||[];ST.confrontIdx=saved.confrontIdx||0;ST.report=saved.report||'';
-    if(ST.stage!==STAGE.DONE){
-      var hasContent=(ST.stage===STAGE.L1||ST.stage===STAGE.L3)?!!ST.curQ:(ST.stage===STAGE.L2)?!!ST.curTask:(ST.stage===STAGE.L4)?ST.confrontQ.length>0:false;
-      needsAdvance=!hasContent;
-    }
-  }
-  render();
-  if(needsAdvance)advance();
-})();
+/* Sayfa her zaman giriş ekranıyla açılır - kayıtlı ilerleme varsa orada ayrı bir
+   "kaldığın yerden devam et" düğmesiyle sunulur, otomatik atlama yapılmaz. */
+render();
 </script>
 </body>
 </html>
