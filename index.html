@@ -35,6 +35,10 @@
   .opt-btn{text-align:left;background:transparent;border:1px solid var(--line2);color:var(--ink);padding:13px 16px;border-radius:8px;cursor:pointer;font-size:14.5px;font-family:inherit;transition:.15s}
   .opt-btn:hover{border-color:var(--amber);background:var(--amber-soft)}
   .opt-btn:disabled{opacity:.5;cursor:wait}
+  .opt-btn.other{border-style:dashed;color:var(--muted)}
+  .other-row{display:flex;gap:8px;margin-top:9px}
+  .other-row input{flex:1;background:var(--bg2);border:1px solid var(--line2);border-radius:8px;color:var(--ink);padding:11px 13px;font-size:14.5px;font-family:inherit;outline:none}
+  .other-row input:focus{border-color:var(--amber)}
   .spinner{display:flex;align-items:center;gap:10px;color:var(--muted);padding:20px 0;font-size:13.5px}
   .sdot{width:7px;height:7px;border-radius:50%;background:var(--amber);animation:pul 1.1s infinite ease-in-out}
   @keyframes pul{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}
@@ -113,7 +117,7 @@ function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'
 /* ================= Sistem promptları ================= */
 const TURKISH_QUALITY_NOTE=`Yazdığın Türkçe metin dilbilgisi ve yazım kurallarına tam uygun, akıcı ve doğal olmalı; özne-yüklem uyumsuzluğu, eksik/yanlış ek, imla hatası veya anlatım bozukluğu OLMAMALI. Yanıtı vermeden önce kendi cümlelerini sessizce gözden geçir ve varsa hataları düzelt.`;
 const SYS={
-  career:`Sen bir kariyer ve meslek eşleştirme uzmanısın. Dünyada binlerce farklı meslek/kariyer yönü var; kullanıcının cevaplarına göre bunlar arasından gerçekten ona uygun olanları buluyorsun - BEKLENMEDİK eşleşmelerden çekinme (ör. yapay zeka kariyeri düşünen biri kanıtlara göre aslında veterinerliğe ya da görsel sanatlara çok daha yatkın çıkabilir; bu tür sürpriz ama mantıklı sonuçlar değerlidir, bastırma). KURALLAR: (1) SADECE çoktan seçmeli sorular sor, asla serbest yazım isteme. (2) Sorular BASİT, SOMUT, GÜNLÜK ve HIZLI cevaplanabilir olmalı - asla ağır, varoluşsal, "seni ne durduruyor", "neden hep şuna yöneliyorsun" tarzı yorucu/boğucu sorular sorma. İyi soru örneği: "Hafta sonun boş, ne yaparsın? A) Yeni bir konu hakkında okuma/izleme yaparım B) Arkadaşlarla buluşurum C) Elimle bir şey yapar/onarırım D) Tek başıma doğada vakit geçiririm" - somut, gerçek hayattan, eğlenceli. (3) Sana önceki cevap geçmişi ve mevcut aday meslek listesi verilecek (boş olabilir, ilk soru ise). Her seferinde: aday listesini güncelle (en iyi eşleşenden başlayarak 4-6 aday tut; zayıf adayları çıkar, güçlü/sürpriz yeni adayları ekle, her adaya kısa bir gerekçe yaz), sonra şu anki en güçlü adaylar arasında EN ÇOK AYRIM yaratacak somut bir sonraki soru üret. (4) En güçlü 1-2 aday net şekilde öne çıktıysa converged:true işaretle (bu durumda question null, options boş dizi olur). ${TURKISH_QUALITY_NOTE} SADECE JSON: {"candidates":[{"name":string,"why":string kısa gerekçe}],"question":string veya null,"options":[string,string,string] (3-5 kısa seçenek; converged:true ise []),"converged":boolean}`,
+  career:`Sen bir kariyer ve meslek eşleştirme uzmanısın. Dünyada binlerce farklı meslek/kariyer yönü var; kullanıcının cevaplarına göre bunlar arasından gerçekten ona uygun olanları buluyorsun - BEKLENMEDİK eşleşmelerden çekinme (ör. yapay zeka kariyeri düşünen biri kanıtlara göre aslında veterinerliğe ya da görsel sanatlara çok daha yatkın çıkabilir; bu tür sürpriz ama mantıklı sonuçlar değerlidir, bastırma). KURALLAR: (1) Sorular çoktan seçmeli olmalı (kullanıcı ayrıca "Diğer, kendim yazayım" seçeneğiyle serbest de cevap verebilir - bu arayüz tarafından otomatik eklenir, sen sadece normal seçenekleri üret). (2) Sorular BASİT, SOMUT, GÜNLÜK ve HIZLI cevaplanabilir olmalı - asla ağır, varoluşsal, "seni ne durduruyor", "neden hep şuna yöneliyorsun" tarzı yorucu/boğucu sorular sorma. İyi soru örneği: "Hafta sonun boş, ne yaparsın? A) Yeni bir konu hakkında okuma/izleme yaparım B) Arkadaşlarla buluşurum C) Elimle bir şey yapar/onarırım D) Tek başıma doğada vakit geçiririm" - somut, gerçek hayattan, eğlenceli. (3) Sana önceki cevap geçmişi (bazı cevaplar kullanıcının kendi yazdığı serbest metin olabilir, bunlar da geçerli sinyaldir) ve mevcut aday meslek listesi verilecek (boş olabilir, ilk soru ise) - ayrıca kullanıcının kaç kez "Diğer" deyip serbest yazdığını gösteren bir sayı (otherCount) gelecek; bu sayı yüksekse SEÇENEKLERİNİ daha geniş/çeşitli/öngörülemez tasarla, kullanıcının hayatı senin standart seçeneklerine sığmıyor demektir. Her seferinde: aday listesini güncelle (en iyi eşleşenden başlayarak 4-6 aday tut; zayıf adayları çıkar, güçlü/sürpriz yeni adayları ekle, her adaya kısa bir gerekçe yaz), sonra şu anki en güçlü adaylar arasında EN ÇOK AYRIM yaratacak somut bir sonraki soru üret. (4) En güçlü 1-2 aday net şekilde öne çıktıysa converged:true işaretle (bu durumda question null, options boş dizi olur). ${TURKISH_QUALITY_NOTE} SADECE JSON: {"candidates":[{"name":string,"why":string kısa gerekçe}],"question":string veya null,"options":[string,string,string] (3-5 kısa seçenek; converged:true ise []),"converged":boolean}`,
   final:`Kullanıcının verdiği tüm cevapları ve son aday meslek/kariyer listesini inceleyerek nihai bir rapor yaz. Amaç kişiliği etiketlemek değil, somut bir kariyer/meslek yönü göstermek. BEKLENMEDİK ama kanıta dayalı eşleşmelerden çekinme, gerekirse kullanıcının başta düşündüğünden farklı bir yön öner. Türkçe, samimi, markdown formatında yaz. Bölümler: "## En Uygun Yönlerin" (en iyi 2-3 meslek/kariyer yönü; her biri için, hangi cevaplara dayandığını belirten kısa bir gerekçe), "## İlk Adım" (her aday için, o yönü gerçekten test etmek için bu hafta başlanabilecek TEK somut, küçük bir eylem - jenerik tavsiye değil, gerçekten yapılabilir bir şey). ASLA sayısal puan/yüzde uydurma (ör. "%87 uyum") - sadece sıralama ve nitel gerekçe kullan. Kullanıcıya doğrudan "sen" diye hitap et. ${TURKISH_QUALITY_NOTE} SADECE markdown metin döndür, JSON değil, kod bloğu işareti kullanma.`
 };
 
@@ -121,12 +125,12 @@ const SYS={
 const STAGE={INTRO:'intro',QUIZ:'quiz',SYNTH:'synth',DONE:'done'};
 const Q_MIN=6,Q_MAX=10;
 
-function freshState(){return {stage:STAGE.QUIZ,history:[],candidates:[],curQ:null,curPreCandidates:[],report:'',busy:false,error:null};}
+function freshState(){return {stage:STAGE.QUIZ,history:[],candidates:[],curQ:null,curPreCandidates:[],otherCount:0,showOther:false,report:'',busy:false,error:null};}
 function loadState(){try{var s=JSON.parse(localStorage.getItem('ok_state')||'null');if(s&&s.stage)return s;}catch(e){}return null;}
-function saveState(){try{localStorage.setItem('ok_state',JSON.stringify({stage:ST.stage,history:ST.history,candidates:ST.candidates,curQ:ST.curQ,curPreCandidates:ST.curPreCandidates,report:ST.report}));}catch(e){}}
+function saveState(){try{localStorage.setItem('ok_state',JSON.stringify({stage:ST.stage,history:ST.history,candidates:ST.candidates,curQ:ST.curQ,curPreCandidates:ST.curPreCandidates,otherCount:ST.otherCount,report:ST.report}));}catch(e){}}
 function clearState(){try{localStorage.removeItem('ok_state');}catch(e){}}
 
-var ST={stage:STAGE.INTRO,history:[],candidates:[],curQ:null,curPreCandidates:[],report:'',busy:false,error:null};
+var ST={stage:STAGE.INTRO,history:[],candidates:[],curQ:null,curPreCandidates:[],otherCount:0,showOther:false,report:'',busy:false,error:null};
 
 function compactHistory(){return ST.history.map(function(h){return {q:h.question,a:h.chosenLabel};});}
 
@@ -135,11 +139,11 @@ function startFlow(){clearState();ST=freshState();render();advance();}
 function resumeFlow(){
   var saved=loadState();if(!saved){startFlow();return;}
   ST.stage=saved.stage;ST.history=saved.history||[];ST.candidates=saved.candidates||[];
-  ST.curQ=saved.curQ||null;ST.curPreCandidates=saved.curPreCandidates||[];ST.report=saved.report||'';
+  ST.curQ=saved.curQ||null;ST.curPreCandidates=saved.curPreCandidates||[];ST.otherCount=saved.otherCount||0;ST.report=saved.report||'';
   render();
   if((ST.stage===STAGE.QUIZ&&!ST.curQ)||ST.stage===STAGE.SYNTH)advance();
 }
-function restart(){clearState();ST={stage:STAGE.INTRO,history:[],candidates:[],curQ:null,curPreCandidates:[],report:'',busy:false,error:null};render();}
+function restart(){clearState();ST={stage:STAGE.INTRO,history:[],candidates:[],curQ:null,curPreCandidates:[],otherCount:0,showOther:false,report:'',busy:false,error:null};render();}
 
 async function advance(){
   ST.error=null;
@@ -151,7 +155,7 @@ async function fetchNextQuestion(){
   setBusy(true);render();
   try{
     var preCands=ST.candidates;
-    var payload={candidates:preCands,history:compactHistory(),n:ST.history.length};
+    var payload={candidates:preCands,history:compactHistory(),n:ST.history.length,otherCount:ST.otherCount||0};
     var r=await ai([{role:'system',content:SYS.career},{role:'user',content:JSON.stringify(payload)}],true,0.8);
     if(r&&r.candidates)ST.candidates=r.candidates;
     var converged=r&&r.converged;
@@ -167,7 +171,18 @@ function answerQuestion(idx){
   if(!ST.curQ||ST.busy)return;
   var label=ST.curQ.options[idx];
   ST.history.push({question:ST.curQ.question,options:ST.curQ.options,chosenIndex:idx,chosenLabel:label,preCandidates:ST.curPreCandidates});
-  ST.curQ=null;
+  ST.curQ=null;ST.showOther=false;
+  saveState();render();
+  advance();
+}
+function showOtherInput(){ST.showOther=true;render();setTimeout(function(){var i=document.getElementById('otherTxt');if(i)i.focus();},0);}
+function answerCustom(){
+  if(!ST.curQ||ST.busy)return;
+  var inp=document.getElementById('otherTxt');var text=inp?inp.value.trim():'';
+  if(!text)return;
+  ST.history.push({question:ST.curQ.question,options:ST.curQ.options,chosenIndex:-1,chosenLabel:text,preCandidates:ST.curPreCandidates});
+  ST.otherCount=(ST.otherCount||0)+1;
+  ST.curQ=null;ST.showOther=false;
   saveState();render();
   advance();
 }
@@ -177,7 +192,7 @@ function goBack(){
   ST.candidates=last.preCandidates||[];
   ST.curQ={question:last.question,options:last.options};
   ST.curPreCandidates=last.preCandidates||[];
-  ST.error=null;
+  ST.error=null;ST.showOther=false;
   saveState();render();
 }
 
@@ -232,7 +247,13 @@ function tplQuiz(){
   h+=ST.curQ.options.map(function(o,i){
     return '<button class="opt-btn" '+(ST.busy?'disabled':'')+' onclick="answerQuestion('+i+')">'+esc(o)+'</button>';
   }).join('');
-  h+='</div></div>';
+  h+='<button class="opt-btn other" '+(ST.busy?'disabled':'')+' onclick="showOtherInput()">✏️ Diğer, kendim yazayım</button>';
+  h+='</div>';
+  if(ST.showOther){
+    h+='<div class="other-row"><input id="otherTxt" type="text" placeholder="Kendi cevabını yaz…" onkeydown="if(event.key===\'Enter\')answerCustom()">'
+      +'<button class="btn primary" '+(ST.busy?'disabled':'')+' onclick="answerCustom()">Gönder</button></div>';
+  }
+  h+='</div>';
   return h;
 }
 function mdToHtml(md){
