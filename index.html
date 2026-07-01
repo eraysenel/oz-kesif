@@ -128,11 +128,21 @@ SORU KURALLARI:
 (4) otherCount yüksekse seçenekleri daha geniş/çeşitli tasarla - kullanıcının hayatı standart seçeneklere sığmıyor demektir.
 
 ADAY VE BİTİŞ KURALLARI:
-(5) Her seferinde aday listesini güncelle: en iyi eşleşenden başlayarak 4-6 aday; zayıfları çıkar, güçlü/sürpriz yenileri ekle, her adaya kısa gerekçe.
+(5) Her seferinde aday listesini güncelle: en iyi eşleşenden başlayarak 4-6 aday; zayıfları çıkar, güçlü/sürpriz yenileri ekle, her adaya kısa gerekçe. Güncellerken tek bir cevabın klişe çağrışımına göre değil ("resim seçti → ressam" gibi), cevapların KOMBİNASYONUNA göre düşün; kullanıcının "Diğer" deyip kendi yazdığı cevaplara özellikle ağırlık ver.
 (6) ERKEN BİTİR - uzatma: yeni bir sorunun sıralamayı gerçekten değiştirme ihtimali düşükse converged:true işaretle (question null, options []). Kullanıcıyı yormak sonucu iyileştirmez; 5-6 net cevaptan sonra ilk 1-2 aday belliyse BİTİR. n, maxN'e yaklaşıyorsa yalnızca gerçekten kritik bir ayrım kaldıysa soru sor.
 
 ${TURKISH_QUALITY_NOTE} SADECE JSON: {"candidates":[{"name":string,"why":string}],"question":string veya null,"options":[string,...] (3-5 kısa seçenek; converged:true ise []),"theme":string (bu sorunun 2-4 kelimelik teması; converged:true ise ""),"converged":boolean}`,
-  final:`Kullanıcının verdiği tüm cevapları ve son aday meslek/kariyer listesini inceleyerek nihai bir rapor yaz. Amaç kişiliği etiketlemek değil, somut bir kariyer/meslek yönü göstermek. BEKLENMEDİK ama kanıta dayalı eşleşmelerden çekinme, gerekirse kullanıcının başta düşündüğünden farklı bir yön öner. Türkçe, samimi, markdown formatında yaz. Bölümler: "## En Uygun Yönlerin" (en iyi 2-3 meslek/kariyer yönü; her biri için, hangi cevaplara dayandığını belirten kısa bir gerekçe), "## İlk Adım" (her aday için, o yönü gerçekten test etmek için bu hafta başlanabilecek TEK somut, küçük bir eylem - jenerik tavsiye değil, gerçekten yapılabilir bir şey). ASLA sayısal puan/yüzde uydurma (ör. "%87 uyum") - sadece sıralama ve nitel gerekçe kullan. Kullanıcıya doğrudan "sen" diye hitap et. ${TURKISH_QUALITY_NOTE} SADECE markdown metin döndür, JSON değil, kod bloğu işareti kullanma.`
+  final:`Kullanıcının verdiği tüm cevapları ve son aday meslek/kariyer listesini inceleyerek nihai bir rapor yaz. Amaç kişiliği etiketlemek değil, somut bir kariyer/meslek yönü göstermek.
+
+Raporu yazmadan önce şu analiz adımlarını SESSİZCE uygula (bu adımları ASLA rapora yazma, sadece sonucunu yansıt):
+ADIM 1 - Klişe temizliği: Bu cevap setine herkesin söyleyeceği 3-5 genel geçer/klişe yorumu zihninde listele ve HEPSİNİ çöpe at. Rapora bunlardan hiçbiri sızmamalı.
+ADIM 2 - Ayırt edici sinyaller: Sadece bu kullanıcıya özgü olana odaklan - alışılmadık cevap KOMBİNASYONLARI, kullanıcının "Diğer" deyip KENDİ YAZDIĞI cevaplar (bunlar en değerli sinyaldir, özellikle ağırlık ver), ve cevaplar arası çelişkiler/gerilimler.
+ADIM 3 - Kendi bulgunu çökert: Öne çıkardığın her yön için "bu eşleşme yanlış olabilir çünkü..." diye kendine bir itiraz üret; itiraza cevaplarda karşı-kanıt bulabiliyorsan yönü koru, bulamıyorsan o yönü zayıflat veya çıkar. Rapora sadece bu testten sağ çıkanlar girer.
+
+BEKLENMEDİK ama kanıta dayalı eşleşmelerden çekinme, gerekirse kullanıcının başta düşündüğünden farklı bir yön öner. Türkçe, samimi, markdown formatında yaz. Bölümler:
+"## En Uygun Yönlerin" - en iyi 2-3 meslek/kariyer yönü; her biri için HANGİ CEVAPLARA dayandığını somut belirten kısa gerekçe (genel laf değil, "X sorusuna Y demen..." gibi).
+"## İlk Adım" - her yön için bu hafta başlanabilecek TEK somut, küçük eylem; her eylemin yanına tek cümleyle en zayıf noktasını da yaz ("Dikkat: bu öneri sana uymayabilir, çünkü ...") - kullanıcı neyi test ettiğini bilsin.
+ASLA sayısal puan/yüzde uydurma (ör. "%87 uyum") - sadece sıralama ve nitel gerekçe kullan. Kullanıcıya doğrudan "sen" diye hitap et. ${TURKISH_QUALITY_NOTE} SADECE markdown metin döndür, JSON değil, kod bloğu işareti kullanma.`
 };
 
 /* ================= Durum ================= */
