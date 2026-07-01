@@ -117,13 +117,27 @@ function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'
 /* ================= Sistem promptları ================= */
 const TURKISH_QUALITY_NOTE=`Yazdığın Türkçe metin dilbilgisi ve yazım kurallarına tam uygun, akıcı ve doğal olmalı; özne-yüklem uyumsuzluğu, eksik/yanlış ek, imla hatası veya anlatım bozukluğu OLMAMALI. Yanıtı vermeden önce kendi cümlelerini sessizce gözden geçir ve varsa hataları düzelt.`;
 const SYS={
-  career:`Sen bir kariyer ve meslek eşleştirme uzmanısın. Dünyada binlerce farklı meslek/kariyer yönü var; kullanıcının cevaplarına göre bunlar arasından gerçekten ona uygun olanları buluyorsun - BEKLENMEDİK eşleşmelerden çekinme (ör. yapay zeka kariyeri düşünen biri kanıtlara göre aslında veterinerliğe ya da görsel sanatlara çok daha yatkın çıkabilir; bu tür sürpriz ama mantıklı sonuçlar değerlidir, bastırma). KURALLAR: (1) Sorular çoktan seçmeli olmalı (kullanıcı ayrıca "Diğer, kendim yazayım" seçeneğiyle serbest de cevap verebilir - bu arayüz tarafından otomatik eklenir, sen sadece normal seçenekleri üret). (2) Sorular BASİT, SOMUT, GÜNLÜK ve HIZLI cevaplanabilir olmalı - asla ağır, varoluşsal, "seni ne durduruyor", "neden hep şuna yöneliyorsun" tarzı yorucu/boğucu sorular sorma. İyi soru örneği: "Hafta sonun boş, ne yaparsın? A) Yeni bir konu hakkında okuma/izleme yaparım B) Arkadaşlarla buluşurum C) Elimle bir şey yapar/onarırım D) Tek başıma doğada vakit geçiririm" - somut, gerçek hayattan, eğlenceli. (3) Sana önceki cevap geçmişi (bazı cevaplar kullanıcının kendi yazdığı serbest metin olabilir, bunlar da geçerli sinyaldir) ve mevcut aday meslek listesi verilecek (boş olabilir, ilk soru ise) - ayrıca kullanıcının kaç kez "Diğer" deyip serbest yazdığını gösteren bir sayı (otherCount) gelecek; bu sayı yüksekse SEÇENEKLERİNİ daha geniş/çeşitli/öngörülemez tasarla, kullanıcının hayatı senin standart seçeneklerine sığmıyor demektir. Her seferinde: aday listesini güncelle (en iyi eşleşenden başlayarak 4-6 aday tut; zayıf adayları çıkar, güçlü/sürpriz yeni adayları ekle, her adaya kısa bir gerekçe yaz), sonra şu anki en güçlü adaylar arasında EN ÇOK AYRIM yaratacak somut bir sonraki soru üret. (4) En güçlü 1-2 aday net şekilde öne çıktıysa converged:true işaretle (bu durumda question null, options boş dizi olur). ${TURKISH_QUALITY_NOTE} SADECE JSON: {"candidates":[{"name":string,"why":string kısa gerekçe}],"question":string veya null,"options":[string,string,string] (3-5 kısa seçenek; converged:true ise []),"converged":boolean}`,
+  career:`Sen bir kariyer ve meslek eşleştirme uzmanısın. Dünyada binlerce farklı meslek/kariyer yönü var; kullanıcının cevaplarına göre bunlar arasından gerçekten ona uygun olanları buluyorsun - BEKLENMEDİK eşleşmelerden çekinme (ör. yapay zeka kariyeri düşünen biri kanıtlara göre aslında veterinerliğe ya da görsel sanatlara çok daha yatkın çıkabilir; bu tür sürpriz ama mantıklı sonuçlar değerlidir, bastırma).
+
+Sana şu veri gelecek: {history:[{q,a}...] cevap geçmişi (bazı cevaplar kullanıcının serbest yazdığı metin olabilir, geçerli sinyaldir), candidates: mevcut aday listesi (ilk soruysa boş), usedThemes:[şimdiye dek işlenen temalar], n: kaçıncı soru, maxN: en fazla soru sayısı, otherCount: kullanıcının kaç kez "Diğer" deyip kendi cevabını yazdığı}.
+
+SORU KURALLARI:
+(1) TEKRAR YASAĞI - en önemli kural: usedThemes listesindeki hiçbir temaya bir daha dokunma; history'deki sorulara benzeyen, aynı bilgiyi farklı kelimelerle soran soru ASLA üretme. Her soru daha önce HİÇ ölçülmemiş yeni bir ekseni ölçmeli (örnek eksenler: insan-mı-nesne-mi, düzen-mi-belirsizlik-mi, üretmek-mi-analiz-mi, fiziksel-mi-zihinsel-mi, gelir/istikrar beklentisi, öğrenme tarzı, çalışma ortamı, sorumluluk isteği, sabır/tekrar toleransı...). Yanıtında bu sorunun temasını "theme" alanında 2-4 kelimeyle bildir.
+(2) DERİNLEŞME - n arttıkça sorular GENELDEN ÖZELE gitmeli: ilk 2-3 soru geniş yaşam alanlarını tarar; sonrasında sorular mevcut EN GÜÇLÜ adaylara ÖZEL, o mesleklerin gerçek günlük durumlarından somut mini senaryolar olmalı (ör. adaylar "veteriner" ve "yazılımcı" ise: "Bütün gün tek başına ekrana odaklanmak mı, yoksa sürekli farklı canlılarla/insanlarla uğraşmak mı seni daha az yorar?" gibi doğrudan ayrıştıran sorular). Kullanıcının önceki seçimlerine atıfta bulunan, kişiselleşmiş sorular üret - jenerik anket sorusu değil.
+(3) Sorular BASİT, SOMUT, GÜNLÜK ve HIZLI cevaplanabilir olmalı - asla ağır, varoluşsal, yorucu sorular sorma.
+(4) otherCount yüksekse seçenekleri daha geniş/çeşitli tasarla - kullanıcının hayatı standart seçeneklere sığmıyor demektir.
+
+ADAY VE BİTİŞ KURALLARI:
+(5) Her seferinde aday listesini güncelle: en iyi eşleşenden başlayarak 4-6 aday; zayıfları çıkar, güçlü/sürpriz yenileri ekle, her adaya kısa gerekçe.
+(6) ERKEN BİTİR - uzatma: yeni bir sorunun sıralamayı gerçekten değiştirme ihtimali düşükse converged:true işaretle (question null, options []). Kullanıcıyı yormak sonucu iyileştirmez; 5-6 net cevaptan sonra ilk 1-2 aday belliyse BİTİR. n, maxN'e yaklaşıyorsa yalnızca gerçekten kritik bir ayrım kaldıysa soru sor.
+
+${TURKISH_QUALITY_NOTE} SADECE JSON: {"candidates":[{"name":string,"why":string}],"question":string veya null,"options":[string,...] (3-5 kısa seçenek; converged:true ise []),"theme":string (bu sorunun 2-4 kelimelik teması; converged:true ise ""),"converged":boolean}`,
   final:`Kullanıcının verdiği tüm cevapları ve son aday meslek/kariyer listesini inceleyerek nihai bir rapor yaz. Amaç kişiliği etiketlemek değil, somut bir kariyer/meslek yönü göstermek. BEKLENMEDİK ama kanıta dayalı eşleşmelerden çekinme, gerekirse kullanıcının başta düşündüğünden farklı bir yön öner. Türkçe, samimi, markdown formatında yaz. Bölümler: "## En Uygun Yönlerin" (en iyi 2-3 meslek/kariyer yönü; her biri için, hangi cevaplara dayandığını belirten kısa bir gerekçe), "## İlk Adım" (her aday için, o yönü gerçekten test etmek için bu hafta başlanabilecek TEK somut, küçük bir eylem - jenerik tavsiye değil, gerçekten yapılabilir bir şey). ASLA sayısal puan/yüzde uydurma (ör. "%87 uyum") - sadece sıralama ve nitel gerekçe kullan. Kullanıcıya doğrudan "sen" diye hitap et. ${TURKISH_QUALITY_NOTE} SADECE markdown metin döndür, JSON değil, kod bloğu işareti kullanma.`
 };
 
 /* ================= Durum ================= */
 const STAGE={INTRO:'intro',QUIZ:'quiz',SYNTH:'synth',DONE:'done'};
-const Q_MIN=6,Q_MAX=10;
+const Q_MIN=4,Q_MAX=8;
 
 function freshState(){return {stage:STAGE.QUIZ,history:[],candidates:[],curQ:null,curPreCandidates:[],otherCount:0,showOther:false,report:'',busy:false,error:null};}
 function loadState(){try{var s=JSON.parse(localStorage.getItem('ok_state')||'null');if(s&&s.stage)return s;}catch(e){}return null;}
@@ -133,6 +147,7 @@ function clearState(){try{localStorage.removeItem('ok_state');}catch(e){}}
 var ST={stage:STAGE.INTRO,history:[],candidates:[],curQ:null,curPreCandidates:[],otherCount:0,showOther:false,report:'',busy:false,error:null};
 
 function compactHistory(){return ST.history.map(function(h){return {q:h.question,a:h.chosenLabel};});}
+function usedThemes(){return ST.history.map(function(h){return h.theme||'';}).filter(Boolean);}
 
 /* ================= Akış mantığı ================= */
 function startFlow(){clearState();ST=freshState();render();advance();}
@@ -155,14 +170,14 @@ async function fetchNextQuestion(){
   setBusy(true);render();
   try{
     var preCands=ST.candidates;
-    var payload={candidates:preCands,history:compactHistory(),n:ST.history.length,otherCount:ST.otherCount||0};
+    var payload={candidates:preCands,history:compactHistory(),usedThemes:usedThemes(),n:ST.history.length,maxN:Q_MAX,otherCount:ST.otherCount||0};
     var r=await ai([{role:'system',content:SYS.career},{role:'user',content:JSON.stringify(payload)}],true,0.8);
     if(r&&r.candidates)ST.candidates=r.candidates;
-    var converged=r&&r.converged;
+    var converged=r&&(r.converged||!r.question);
     if((ST.history.length>=Q_MIN&&converged)||ST.history.length>=Q_MAX){
       ST.stage=STAGE.SYNTH;ST.curQ=null;saveState();render();advance();return;
     }
-    ST.curQ={question:(r&&r.question)||'',options:(r&&r.options&&r.options.length?r.options:['Evet','Hayır'])};
+    ST.curQ={question:(r&&r.question)||'',options:(r&&r.options&&r.options.length?r.options:['Evet','Hayır']),theme:(r&&r.theme)||''};
     ST.curPreCandidates=preCands;
   }catch(e){ST.error=e.message;}
   setBusy(false);saveState();render();
@@ -170,7 +185,7 @@ async function fetchNextQuestion(){
 function answerQuestion(idx){
   if(!ST.curQ||ST.busy)return;
   var label=ST.curQ.options[idx];
-  ST.history.push({question:ST.curQ.question,options:ST.curQ.options,chosenIndex:idx,chosenLabel:label,preCandidates:ST.curPreCandidates});
+  ST.history.push({question:ST.curQ.question,options:ST.curQ.options,theme:ST.curQ.theme||'',chosenIndex:idx,chosenLabel:label,preCandidates:ST.curPreCandidates});
   ST.curQ=null;ST.showOther=false;
   saveState();render();
   advance();
@@ -180,7 +195,7 @@ function answerCustom(){
   if(!ST.curQ||ST.busy)return;
   var inp=document.getElementById('otherTxt');var text=inp?inp.value.trim():'';
   if(!text)return;
-  ST.history.push({question:ST.curQ.question,options:ST.curQ.options,chosenIndex:-1,chosenLabel:text,preCandidates:ST.curPreCandidates});
+  ST.history.push({question:ST.curQ.question,options:ST.curQ.options,theme:ST.curQ.theme||'',chosenIndex:-1,chosenLabel:text,preCandidates:ST.curPreCandidates});
   ST.otherCount=(ST.otherCount||0)+1;
   ST.curQ=null;ST.showOther=false;
   saveState();render();
@@ -190,7 +205,7 @@ function goBack(){
   if(!ST.history.length||ST.busy)return;
   var last=ST.history.pop();
   ST.candidates=last.preCandidates||[];
-  ST.curQ={question:last.question,options:last.options};
+  ST.curQ={question:last.question,options:last.options,theme:last.theme||''};
   ST.curPreCandidates=last.preCandidates||[];
   ST.error=null;ST.showOther=false;
   saveState();render();
@@ -243,7 +258,8 @@ function tplQuiz(){
   if(ST.busy&&!ST.curQ)return '<div class="spinner"><span class="sdot"></span>düşünülüyor…</div>';
   if(!ST.curQ)return '';
   var backBtn=ST.history.length>0?'<button class="btn" style="margin-bottom:14px" '+(ST.busy?'disabled':'')+' onclick="goBack()">← Önceki cevaba dön</button>':'';
-  var h=backBtn+'<div class="card"><p class="q-text">'+esc(ST.curQ.question)+'</p><div class="opt-list">';
+  var counter='<div style="color:var(--dim);font-size:12.5px;font-weight:600;margin-bottom:10px">Soru '+(ST.history.length+1)+' · en fazla '+Q_MAX+'</div>';
+  var h=backBtn+'<div class="card">'+counter+'<p class="q-text">'+esc(ST.curQ.question)+'</p><div class="opt-list">';
   h+=ST.curQ.options.map(function(o,i){
     return '<button class="opt-btn" '+(ST.busy?'disabled':'')+' onclick="answerQuestion('+i+')">'+esc(o)+'</button>';
   }).join('');
